@@ -1,6 +1,8 @@
 package br.ifrn.edu.jeferson.ecommerce.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;  // Importa a anotação de cache
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,7 @@ public class CategoriaController {
 
     @Operation(summary = "Listar categorias")
     @GetMapping
+    @Cacheable(value = "categorias", key = "#nome + '-' + #descricao + '-' + #pageable.pageNumber")  // Aplica o cache
     public ResponseEntity<Page<CategoriaResponseDTO>> lista(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String descricao,
@@ -65,6 +68,7 @@ public class CategoriaController {
     }
 
     @Operation(summary = "Remover um produto de uma categoria")
+    @CacheEvict(value = "categorias", allEntries = true)
     @DeleteMapping("/{categoriaId}/produtos/{produtoId}")
     public ResponseEntity<ProdutoResponseDTO> removerProdutoDaCategoria(@PathVariable Long categoriaId, @PathVariable Long produtoId) {
         return ResponseEntity.ok(categoriaService.removerProdutoDaCategoria(categoriaId, produtoId));
