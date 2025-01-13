@@ -1,22 +1,31 @@
 package br.ifrn.edu.jeferson.ecommerce.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import br.ifrn.edu.jeferson.ecommerce.domain.dtos.CategoriaRequestDTO;
 import br.ifrn.edu.jeferson.ecommerce.domain.dtos.CategoriaResponseDTO;
 import br.ifrn.edu.jeferson.ecommerce.domain.dtos.ProdutoResponseDTO;
 import br.ifrn.edu.jeferson.ecommerce.service.CategoriaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Controller
 @RequestMapping("/api/categorias")
 @Tag(name = "Categorias", description = "API de gerenciamento de categorias dos Produtos")
 public class CategoriaController {
+
     @Autowired
     private CategoriaService categoriaService;
 
@@ -26,10 +35,14 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaService.salvar(categoriaDto));
     }
 
-    @Operation(summary = "Listar uma nova categoria")
+    @Operation(summary = "Listar categorias")
     @GetMapping
-    public ResponseEntity<List<CategoriaResponseDTO>> listar() {
-        return ResponseEntity.ok(categoriaService.lista());
+    public ResponseEntity<Page<CategoriaResponseDTO>> lista(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String descricao,
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(categoriaService.lista(pageable, nome, descricao));
     }
 
     @Operation(summary = "Deletar uma nova categoria")

@@ -1,5 +1,11 @@
 package br.ifrn.edu.jeferson.ecommerce.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
 import br.ifrn.edu.jeferson.ecommerce.domain.Categoria;
 import br.ifrn.edu.jeferson.ecommerce.domain.Produto;
 import br.ifrn.edu.jeferson.ecommerce.domain.dtos.CategoriaRequestDTO;
@@ -11,14 +17,11 @@ import br.ifrn.edu.jeferson.ecommerce.mapper.CategoriaMapper;
 import br.ifrn.edu.jeferson.ecommerce.mapper.ProdutoMapper;
 import br.ifrn.edu.jeferson.ecommerce.repository.CategoriaRepository;
 import br.ifrn.edu.jeferson.ecommerce.repository.ProdutoRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import br.ifrn.edu.jeferson.ecommerce.specification.CategoriaSpecification;
 
 @Service
 public class CategoriaService {
+
     @Autowired
     private CategoriaRepository categoriaRepository;
     @Autowired
@@ -38,7 +41,7 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO salvar(CategoriaRequestDTO categoriaDto) {
-        var categoria =  mapper.toEntity(categoriaDto);
+        var categoria = mapper.toEntity(categoriaDto);
 
         if (categoriaRepository.existsByNome(categoria.getNome())) {
             throw new BusinessException("Já existe uma categoria com esse nome");
@@ -48,9 +51,14 @@ public class CategoriaService {
         return mapper.toResponseDTO(categoria);
     }
 
-    public List<CategoriaResponseDTO> lista(){
-        List<Categoria> categorias = categoriaRepository.findAll();
-        return mapper.toDTOList (categorias);
+    public Page<CategoriaResponseDTO> lista(
+            Pageable pageable,
+            String nome,
+            String descricao
+    ) {
+        Specification<Categoria> spec = Specification.where(CategoriaSpecification.comNomeContendo(nome)).and(CategoriaSpecification.comDescricaoContendo(descricao));
+        Page<Categoria> categorias = categoriaRepository.findAll(spec, pageable);
+        return categoriaMapper.toDTOList(categorias);
     }
 
     public void deletar(Long id) {
@@ -64,10 +72,10 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO atualizar(Long id, CategoriaRequestDTO categoriaDto) {
-        Categoria categoria = categoriaRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("Categoria não encontrada"));
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
 
-        if (!categoria.getNome().equals(categoriaDto.getNome()) && categoriaRepository.existsByNome( categoriaDto.getNome()) ) {
-            throw  new BusinessException("Já existe uma categoria com esse nome");
+        if (!categoria.getNome().equals(categoriaDto.getNome()) && categoriaRepository.existsByNome(categoriaDto.getNome())) {
+            throw new BusinessException("Já existe uma categoria com esse nome");
         }
 
         categoriaMapper.updateEntityFromDTO(categoriaDto, categoria);
@@ -77,13 +85,13 @@ public class CategoriaService {
     }
 
     public CategoriaResponseDTO buscarPorId(Long id) {
-        Categoria categoria = categoriaRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("Categoria não encontrada"));
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
         return categoriaMapper.toResponseDTO(categoria);
     }
 
     public ProdutoResponseDTO adicionarProdutoACategoria(Long idCategoria, Long idProduto) {
-        Categoria categoria = categoriaRepository.findById(idCategoria).orElseThrow( () -> new ResourceNotFoundException("Categoria não encontrada"));
-        Produto produto = produtoRepository.findById(idProduto).orElseThrow( () -> new ResourceNotFoundException("Produto não encontrado"));
+        Categoria categoria = categoriaRepository.findById(idCategoria).orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
+        Produto produto = produtoRepository.findById(idProduto).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         categoria.getProdutos().add(produto);
         produto.getCategorias().add(categoria);
@@ -93,10 +101,10 @@ public class CategoriaService {
     }
 
     public ProdutoResponseDTO removerProdutoDaCategoria(Long idCategoria, Long idProduto) {
-        Categoria categoria = categoriaRepository.findById(idCategoria).orElseThrow( () -> new ResourceNotFoundException("Categoria não encontrada"));
+        Categoria categoria = categoriaRepository.findById(idCategoria).orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
         Produto produto = produtoRepository.findById(idProduto).
-                orElseThrow( () -> new ResourceNotFoundException("Produto não encontrado"));
-            
+                orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
+
         categoria.getProdutos().remove(produto);
         produto.getCategorias().remove(categoria);
 
