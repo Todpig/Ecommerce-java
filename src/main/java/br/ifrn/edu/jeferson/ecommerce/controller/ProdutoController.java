@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping("/api/produtos")
 @Tag(name = "Produtos", description = "API de gerenciamento de produtos")
+@EnableCaching
 public class ProdutoController {
     
     @Autowired
@@ -33,12 +37,14 @@ public class ProdutoController {
 
     @Operation(summary = "Criar um novo produto")
     @PostMapping
+    @CacheEvict(value = "produtos", allEntries = true)
     public ResponseEntity<ProdutoResponseDTO> salvar(@RequestBody ProdutoRequestDTO produtoDto) {
         return ResponseEntity.ok(produtoService.salvar(produtoDto));
     }
 
     @Operation(summary = "Listar produtos")
     @GetMapping
+    @Cacheable(value = "produtos", key = "#nome + '-' + #precoMaiorQue + '-' + #precoMenorQue + '-' + #pageable.pageNumber")
     public ResponseEntity<Page<ProdutoResponseDTO>> lista(
         @RequestParam(required = false) String nome,
         @RequestParam(required = false) BigDecimal precoMaiorQue,
@@ -50,12 +56,14 @@ public class ProdutoController {
 
     @Operation(summary = "Buscar produto por id")
     @GetMapping("/{id}")
+    @Cacheable(value = "produto", key = "#id")
     public ResponseEntity<ProdutoResponseDTO> buscarPorId(Long id) {
         return ResponseEntity.ok(produtoService.buscarPorId(id));
     }
 
     @Operation(summary = "Deletar produto")
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "produtos", allEntries = true)
     public ResponseEntity<Void> deletar(Long id) {
         produtoService.deletar(id);
         return ResponseEntity.ok().build();

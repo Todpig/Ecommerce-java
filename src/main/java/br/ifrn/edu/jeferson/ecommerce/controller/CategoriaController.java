@@ -2,7 +2,8 @@ package br.ifrn.edu.jeferson.ecommerce.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;  // Importa a anotação de cache
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping("/api/categorias")
 @Tag(name = "Categorias", description = "API de gerenciamento de categorias dos Produtos")
+@EnableCaching
 public class CategoriaController {
 
     @Autowired
@@ -33,13 +35,14 @@ public class CategoriaController {
 
     @Operation(summary = "Criar uma nova categoria")
     @PostMapping
+    @CacheEvict(value = "categorias", allEntries = true)
     public ResponseEntity<CategoriaResponseDTO> salvar(@RequestBody CategoriaRequestDTO categoriaDto) {
         return ResponseEntity.ok(categoriaService.salvar(categoriaDto));
     }
 
     @Operation(summary = "Listar categorias")
     @GetMapping
-    @Cacheable(value = "categorias", key = "#nome + '-' + #descricao + '-' + #pageable.pageNumber")  // Aplica o cache
+    @Cacheable(value = "categorias", key = "#nome + '-' + #descricao + '-' + #pageable.pageNumber")
     public ResponseEntity<Page<CategoriaResponseDTO>> lista(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String descricao,
@@ -50,6 +53,7 @@ public class CategoriaController {
 
     @Operation(summary = "Deletar uma nova categoria")
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "categorias", allEntries = true)
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         categoriaService.deletar(id);
         return ResponseEntity.ok().build();
