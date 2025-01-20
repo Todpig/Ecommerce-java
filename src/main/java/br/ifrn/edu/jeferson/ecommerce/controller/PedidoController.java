@@ -3,6 +3,9 @@ package br.ifrn.edu.jeferson.ecommerce.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @RequestMapping("/api/pedidos")
 @Tag(name = "Pedidos", description = "API de gerenciamento de pedidos")
+@EnableCaching
 public class PedidoController {
     
     @Autowired
@@ -32,12 +36,14 @@ public class PedidoController {
 
     @Operation(summary = "Criar um novo pedido")
     @PostMapping
+    @CacheEvict(value = "pedidos", allEntries = true)
     public ResponseEntity<PedidoResponseDTO> salvar(@RequestBody PedidoRequestDTO pedidoDto) {
         return ResponseEntity.ok(pedidoService.salvar(pedidoDto));
     }
 
     @Operation(summary = "Listar pedidos")
     @GetMapping
+    @Cacheable(value = "pedidos", key = "#pageable.pageNumber")
     public ResponseEntity<Page<PedidoResponseDTO>> listar(
         Pageable pageable
     ) {
@@ -46,6 +52,7 @@ public class PedidoController {
 
     @Operation(summary = "Deletar um pedido")
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "pedidos", allEntries = true)
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         pedidoService.deletar(id);
         return ResponseEntity.ok().build();
@@ -53,6 +60,7 @@ public class PedidoController {
 
     @Operation(summary = "Atualizar status de um pedido")
     @PutMapping("/{id}/status")
+    @CacheEvict(value = "pedidos", allEntries = true)
     public ResponseEntity<PedidoResponseDTO> atualizarStatusPedido(@PathVariable Long id, @RequestBody PedidoAtualizarRequestDTO statusPedidoDto) {
         return ResponseEntity.ok(pedidoService.atualizarStatusPedido(id, statusPedidoDto.getStatusPedido()));
     }
