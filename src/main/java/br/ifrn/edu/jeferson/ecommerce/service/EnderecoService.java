@@ -1,7 +1,7 @@
 package br.ifrn.edu.jeferson.ecommerce.service;
 
-import java.util.List;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,11 +11,13 @@ import br.ifrn.edu.jeferson.ecommerce.domain.dtos.EnderecoRequestDTO;
 import br.ifrn.edu.jeferson.ecommerce.domain.dtos.EnderecoResponseDTO;
 import br.ifrn.edu.jeferson.ecommerce.exception.ResourceNotFoundException;
 import br.ifrn.edu.jeferson.ecommerce.mapper.EnderecoMapper;
-import br.ifrn.edu.jeferson.ecommerce.repository.EnderecoRepository;
 import br.ifrn.edu.jeferson.ecommerce.repository.ClienteRepository;
+import br.ifrn.edu.jeferson.ecommerce.repository.EnderecoRepository;
 
 @Service
 public class EnderecoService {
+    private static final Logger logger = LoggerFactory.getLogger(EnderecoService.class);
+
     @Autowired
     private EnderecoRepository enderecoRepository;
 
@@ -26,15 +28,14 @@ public class EnderecoService {
     private EnderecoMapper mapper;
 
     public EnderecoResponseDTO salvar(Long clientId, EnderecoRequestDTO enderecoDto) {
+        logger.info("Salvando novo endereço para o cliente com ID {}", clientId);
         // Verifica se o cliente existe
         Cliente cliente = clienteRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
 
-
         if (enderecoRepository.existsByClienteId(clientId)) {
             throw new ResourceNotFoundException("Cliente já possui um endereço cadastrado");
         }
-        
 
         // Mapeia o endereço e associa ao cliente
         Endereco endereco = mapper.toEntity(enderecoDto);
@@ -45,6 +46,7 @@ public class EnderecoService {
     }
 
     public EnderecoResponseDTO listar(Long clientId) {
+        logger.info("Listando endereço do cliente com ID {}", clientId);
         // Verifica se o cliente existe
         if (!clienteRepository.existsById(clientId)) {
             throw new ResourceNotFoundException("Cliente não encontrado");
@@ -56,6 +58,7 @@ public class EnderecoService {
     }
 
     public void deletar(Long clientId, Long id) {
+        logger.info("Deletando endereço com ID {} do cliente com ID {}", id, clientId);
         // Verifica se o cliente existe
         if (!clienteRepository.existsById(clientId)) {
             throw new ResourceNotFoundException("Cliente não encontrado");
@@ -69,6 +72,7 @@ public class EnderecoService {
     }
 
     public EnderecoResponseDTO atualizar(Long clientId, Long id, EnderecoRequestDTO enderecoDto) {
+        logger.info("Atualizando endereço com ID {} do cliente com ID {}", id, clientId);
         // Verifica se o cliente existe
         if (!clienteRepository.existsById(clientId)) {
             throw new ResourceNotFoundException("Cliente não encontrado");

@@ -26,8 +26,12 @@ import br.ifrn.edu.jeferson.ecommerce.repository.ItemPedidoRepository;
 import br.ifrn.edu.jeferson.ecommerce.repository.PedidoRepository;
 import br.ifrn.edu.jeferson.ecommerce.repository.ProdutoRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class PedidoService {
+    private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
     
     @Autowired
     private PedidoRepository pedidoRepository;
@@ -45,18 +49,21 @@ public class PedidoService {
     private PedidoMapper pedidoMapper;
 
     private void verificaSeTodosProdutosExistem(List<Produto> produtos, List<Long> produtosIds) {
+        logger.info("Verificando se todos os produtos existem");
         if (produtosIds.size() != produtos.size()) {
             throw new BusinessException("Um ou mais produtos não foram encontrados");
         }
     }
 
     private void verificaSeProdutoTemEstoqueSuficiente(Produto produto, Integer quantidade) {
+        logger.info("Verificando se o produto {} tem estoque suficiente", produto.getNome());
         if (produto.getEstoque() < quantidade) {
             throw new BusinessException("Estoque insuficiente para o produto " + produto.getNome());
         }
     }
 
     public PedidoResponseDTO salvar(PedidoRequestDTO pedidoDto) {
+        logger.info("Salvando novo pedido para o cliente com ID {}", pedidoDto.getClienteId());
         var produtosIds = pedidoDto.getProdutosIds();
         var produtos = produtoRepository.findAllById(produtosIds);
 
@@ -100,11 +107,13 @@ public class PedidoService {
     public Page<PedidoResponseDTO> lista(
         Pageable pageable
     ){
+        logger.info("Listando pedidos com paginação {}", pageable);
         Page<Pedido> pedidos = pedidoRepository.findAll(pageable);
         return pedidoMapper.toDTOPage(pedidos);
     }
 
     public void deletar(Long id) {
+        logger.info("Deletando pedido com ID {}", id);
         if (!pedidoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Pedido não encontrado");
         }
@@ -112,6 +121,7 @@ public class PedidoService {
     }
 
     public PedidoResponseDTO atualizarStatusPedido(Long id, StatusPedido statusPedido) {
+        logger.info("Atualizando status do pedido com ID {} para {}", id, statusPedido);
         Pedido pedido = pedidoRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("Pedido não encontrado"));
         pedido.setStatusPedido(statusPedido);
         pedido = pedidoRepository.save(pedido);
@@ -119,11 +129,13 @@ public class PedidoService {
     }
 
     public PedidoResponseDTO buscarPorId(Long id) {
+        logger.info("Buscando pedido com ID {}", id);
         Pedido pedido = pedidoRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("Pedido não encontrado"));
         return pedidoMapper.toResponseDTO(pedido);
     }
 
     public List<PedidoResponseDTO> listarPedidosPorCliente(Long clientId) {
+        logger.info("Listando pedidos do cliente com ID {}", clientId);
         List<Pedido> pedidos = pedidoRepository.findByClienteId(clientId);
         return pedidoMapper.toDTOList(pedidos);
     }
