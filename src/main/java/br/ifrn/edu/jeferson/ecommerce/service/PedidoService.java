@@ -1,7 +1,6 @@
 package br.ifrn.edu.jeferson.ecommerce.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +30,9 @@ import org.slf4j.LoggerFactory;
 
 @Service
 public class PedidoService {
+
     private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
-    
+
     @Autowired
     private PedidoRepository pedidoRepository;
 
@@ -45,7 +45,7 @@ public class PedidoService {
     @Autowired
     private ItemPedidoRepository itemPedidoRepository;
 
-    @Autowired  
+    @Autowired
     private PedidoMapper pedidoMapper;
 
     private void verificaSeTodosProdutosExistem(List<Produto> produtos, List<Long> produtosIds) {
@@ -69,14 +69,14 @@ public class PedidoService {
 
         verificaSeTodosProdutosExistem(produtos, produtosIds);
 
-        var cliente = clienteRepository.findById(pedidoDto.getClienteId()).orElseThrow( () -> new ResourceNotFoundException("Cliente não encontrado"));
-        var pedido =  pedidoMapper.toEntity(pedidoDto);
+        var cliente = clienteRepository.findById(pedidoDto.getClienteId()).orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+        var pedido = pedidoMapper.toEntity(pedidoDto);
         var itens = new ArrayList<ItemPedido>();
         var atualizacaoDeEstoque = new ArrayList<Produto>();
         BigDecimal total = BigDecimal.ZERO;
 
         for (ItemPedidoRequestDTO item : pedidoDto.getItensPedido()) {
-            var produto = produtos.stream().filter(p -> p.getId().equals(item.getProdutoId())).findFirst().orElseThrow( () -> new ResourceNotFoundException("Produto não encontrado"));
+            var produto = produtos.stream().filter(p -> p.getId().equals(item.getProdutoId())).findFirst().orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
             verificaSeProdutoTemEstoqueSuficiente(produto, item.getQuantidade());
 
             var itemPedido = new ItemPedido();
@@ -86,11 +86,10 @@ public class PedidoService {
             total = total.add(produto.getPreco().multiply(BigDecimal.valueOf(item.getQuantidade())));
 
             itens.add(itemPedido);
-            
+
             produto.setEstoque(produto.getEstoque() - item.getQuantidade());
             atualizacaoDeEstoque.add(produto);
         }
-
 
         pedido.setCliente(cliente);
         pedido.setDataPedido(LocalDateTime.now());
@@ -105,8 +104,8 @@ public class PedidoService {
     }
 
     public Page<PedidoResponseDTO> lista(
-        Pageable pageable
-    ){
+            Pageable pageable
+    ) {
         logger.info("Listando pedidos com paginação {}", pageable);
         Page<Pedido> pedidos = pedidoRepository.findAll(pageable);
         return pedidoMapper.toDTOPage(pedidos);
@@ -122,7 +121,7 @@ public class PedidoService {
 
     public PedidoResponseDTO atualizarStatusPedido(Long id, StatusPedido statusPedido) {
         logger.info("Atualizando status do pedido com ID {} para {}", id, statusPedido);
-        Pedido pedido = pedidoRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("Pedido não encontrado"));
+        Pedido pedido = pedidoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
         pedido.setStatusPedido(statusPedido);
         pedido = pedidoRepository.save(pedido);
         return pedidoMapper.toResponseDTO(pedido);
@@ -130,7 +129,7 @@ public class PedidoService {
 
     public PedidoResponseDTO buscarPorId(Long id) {
         logger.info("Buscando pedido com ID {}", id);
-        Pedido pedido = pedidoRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("Pedido não encontrado"));
+        Pedido pedido = pedidoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
         return pedidoMapper.toResponseDTO(pedido);
     }
 

@@ -17,7 +17,7 @@ public class ItemPedidoPartialResponseDTO {
     @Schema(example = "1")
     private Long id;
 
-    @Schema(example = "Notebook Dell")
+    @Schema(example = "Ryzen 5")
     private String nome;
 
     @Schema(example = "1000")
